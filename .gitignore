@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# konvertovaný PDF a originály
+/samples/*.pdf
+/samples/*.jpg
+.jpg
