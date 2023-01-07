@@ -1,10 +1,16 @@
 import json
 from os.path import basename, splitext
-import os
 from pdf2image import convert_from_path
 import tkinter as tk
-from tkinter import ANCHOR, Checkbutton, Frame, messagebox, filedialog, Listbox, END
+from tkinter import filedialog
 import threading
+
+
+from PIL import Image
+import pytesseract
+import numpy as np
+pytesseract.pytesseract.tesseract_cmd = r'C:\Users\gameb\AppData\Local\Tesseract-OCR\tesseract.exe'
+
 
 class ARC(tk.Tk):
     name = basename(splitext(basename(__file__.capitalize()))[0])
@@ -22,6 +28,12 @@ class ARC(tk.Tk):
         self.btn_source.pack(side = tk.TOP, anchor = tk.S, padx = 5, pady = 5)
         self.btn_convert = tk.Button(self, text = "Konvertovat", command = self.convert, width = 10, border = 3, background = "#75d060")
         self.btn_convert.pack(side = tk.TOP, anchor = tk.S, padx = 5, pady = 5)
+        self.btn_export = tk.Button(self, text = "export", command = self.write_json, width = 10, border = 3, background = "#75d060")
+        self.btn_export.pack(side = tk.TOP, anchor = tk.S, padx = 5, pady = 5)
+        self.btn_tess = tk.Button(self, text = "tess", command = self.tess, width = 10, border = 3, background = "#75d060")
+        self.btn_tess.pack(side = tk.TOP, anchor = tk.S, padx = 5, pady = 5)
+
+        self.data = {}
 
     def ask_dir(self):
         adress = filedialog.askopenfilename()
@@ -42,6 +54,20 @@ class ARC(tk.Tk):
             images[i].save('page'+ str(i) +'.jpg', 'JPEG')
     
 
+    def write_json(self):
+        name = filedialog.asksaveasfilename(filetypes=(("json", "*.json"),))
+        with open(f"{name}", "w") as file:
+            json.dump(self.data, file, indent = 4)
+
+
+    def tess(self):
+        filename = "page5.jpg"
+        img1 = np.array(Image.open(filename))
+        with open(f"pdf.pdf", "wb") as file:
+            
+            text = pytesseract.image_to_string(img1, lang="ces")
+            
+        print(text)
 
 
     def quit(self, event = None):
@@ -62,7 +88,15 @@ app.mainloop()
         with open(f"joined", 'w') as file:
             joined = join + join2 # pochybuju že tohle bude fungovat XD 
             json.dump(joined, file, indent=4)
-
+####################
+        
+        
+        export = self.var_source.get()
+        export = os.path.split(export)
+        for i in export:
+            if i.endswith(".pdf"):
+                i = i.split(".") # [:4]
+                name = i[0]
 ################################################
 
         self.var_base_folder = tk.StringVar()
