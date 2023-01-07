@@ -1,4 +1,4 @@
-import json
+import base64, json
 from os.path import basename, splitext
 from pdf2image import convert_from_path
 import tkinter as tk
@@ -6,7 +6,7 @@ from tkinter import filedialog
 import threading
 
 
-from PIL import Image
+from PIL import Image, ImageTk
 import pytesseract
 import numpy as np
 pytesseract.pytesseract.tesseract_cmd = r'C:\Users\gameb\AppData\Local\Tesseract-OCR\tesseract.exe'
@@ -22,6 +22,12 @@ class ARC(tk.Tk):
         self.bind("<Escape>", self.quit)
         self.protocol("WM_DELETE_WINDOW", self.quit)
         
+
+        self.canvas = tk.Canvas(background = "#00ff00")
+        self.canvas.pack()
+        self.canvas.bind("<ButtonPress-1>", self.cords)
+        self.canvas.bind("<ButtonRelease-1>", self.cords)
+
         self.var_source = tk.StringVar()
     
         self.btn_source = tk.Button(self, text = "Vybrat Soubor", command = self.ask_dir, width = 30, border = 3, background = "#D3D3D3")
@@ -62,12 +68,31 @@ class ARC(tk.Tk):
 
     def tess(self):
         filename = "page5.jpg"
-        img1 = np.array(Image.open(filename))
-        with open(f"pdf.pdf", "wb") as file:
-            
-            text = pytesseract.image_to_string(img1, lang="ces")
-            
+        img1 = Image.open(filename)#np.array(Image.open(filename))            
+        image_tk = ImageTk.PhotoImage(Image.open(filename))
+        self.one = image_tk #nechápu co to kurva dělá ale funguje to 
+        self.canvas.create_image(0,0, image=image_tk, anchor="nw")
+        
+        
+        
+        img1 = img1.crop((212, 212, 1483, 287))
+        img1.show()
+        
+        img1.save("temp.png", "png")
+        with open("temp.png", "rb") as temp:
+            enc_data = base64.b64encode(temp.read())
+
+        json.dump({'image':str(enc_data)}, open('out.json', 'w'), indent = 4) #do jsonu to musíš házet ve stringu
+        nacist = json.load(open("out.json", "r"))
+        print(nacist["image"])
+
+        
+        text = pytesseract.image_to_string(img1, lang="ces")
         print(text)
+        
+
+    def cords(self, event):
+        print(f"clicked at:  x:{event.x} ; y:{event.y}")
 
 
     def quit(self, event = None):
@@ -82,6 +107,30 @@ app.mainloop()
 #pohřebiště vykradnu---- ehm výpůjčeného kódu :-)
 
 """
+        import Tkinter
+        from PIL import Image, ImageTk
+        from sys import argv
+
+        window = Tkinter.Tk(className="bla")
+
+        image = Image.open(argv[1] if len(argv) >=2 else "bla2.png")
+        canvas = Tkinter.Canvas(window, width=image.size[0], height=image.size[1])
+        canvas.pack()
+        image_tk = ImageTk.PhotoImage(image)
+        canvas.create_image(image.size[0]//2, image.size[1]//2, image=image_tk)
+
+        def callback(event):
+            print "clicked at: ", event.x, event.y
+
+        canvas.bind("<Button-1>", callback)
+        Tkinter.mainloop()
+
+
+
+
+
+
+################x
     def join(self): #tahle funkce by se mohla někdy hodit ale není funkční jen sem ji napsal abych věděl
         join = json.load(f"prvni")
         join2 = json.load(f"druhy")
